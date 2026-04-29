@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Retail Store System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>Retail Store Management</h1>
+
+<div class="container">
+
+    <h2>Add Product</h2>
+    <input type="text" id="name" placeholder="Product Name">
+    <input type="number" id="price" placeholder="Price">
+    <input type="number" id="qty" placeholder="Quantity">
+    <button onclick="addProduct()">Add Product</button>
+
+    <h2>Products</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="productTable"></tbody>
+    </table>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
