@@ -4,31 +4,48 @@ import os
 
 app = Flask(__name__)
 
-# Database connection
-conn = psycopg2.connect(os.environ.get("DATABASE_URL"))
-cursor = conn.cursor()
+# ---------------------------
+# DB CONNECTION FUNCTION (safer)
+# ---------------------------
+def get_conn():
+    return psycopg2.connect(os.environ.get("DATABASE_URL"))
 
-# Create tables
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS Product (
-    product_id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    price NUMERIC(10,2),
-    stock_quantity INT DEFAULT 0
-)
-""")
+# ---------------------------
+# INITIAL TABLE CREATION
+# ---------------------------
+def init_db():
+    conn = get_conn()
+    cursor = conn.cursor()
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS Sales (
-    sale_id SERIAL PRIMARY KEY,
-    product_id INT,
-    quantity INT,
-    price NUMERIC(10,2),
-    sale_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS Product (
+        product_id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        price NUMERIC(10,2),
+        stock_quantity INT DEFAULT 0
+    )
+    """)
 
-conn.commit()
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS Sales (
+        sale_id SERIAL PRIMARY KEY,
+        product_id INT,
+        quantity INT,
+        price NUMERIC(10,2),
+        sale_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+# Run once at startup
+init_db()
+
+# ---------------------------
+# ROUTES
+# ---------------------------
 
 @app.route('/')
 def index():
@@ -37,8 +54,14 @@ def index():
 # Get products
 @app.route('/products')
 def get_products():
+    conn = get_conn()
+    cursor = conn.cursor()
+
     cursor.execute("SELECT * FROM Product ORDER BY product_id")
     rows = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
 
     products = []
     for r in rows:
@@ -59,21 +82,30 @@ def add_product():
     if not data or not data.get('name') or not data.get('price') or not data.get('qty'):
         return jsonify({"error": "Missing fields"}), 400
 
+    conn = get_conn()
+    cursor = conn.cursor()
+
     cursor.execute(
         "INSERT INTO Product(name, price, stock_quantity) VALUES (%s,%s,%s)",
         (data['name'], data['price'], data['qty'])
     )
+
     conn.commit()
+    cursor.close()
+    conn.close()
 
     return jsonify({"message": "Product added"})
 
-# Sell product (with sales tracking)
+# Sell product + track sales
 @app.route('/sell', methods=['POST'])
 def sell():
     data = request.json
 
     if not data or not data.get('id') or not data.get('qty'):
         return jsonify({"error": "Invalid request"}), 400
+
+    conn = get_conn()
+    cursor = conn.cursor()
 
     cursor.execute(
         "SELECT stock_quantity, price FROM Product WHERE product_id = %s",
@@ -82,11 +114,15 @@ def sell():
     result = cursor.fetchone()
 
     if not result:
+        cursor.close()
+        conn.close()
         return jsonify({"error": "Product not found"}), 404
 
     stock, price = result
 
     if int(data['qty']) > stock:
+        cursor.close()
+        conn.close()
         return jsonify({"error": "Not enough stock"}), 400
 
     # Record sale
@@ -102,6 +138,8 @@ def sell():
     )
 
     conn.commit()
+    cursor.close()
+    conn.close()
 
     return jsonify({"message": "Sale recorded"})
 
@@ -113,23 +151,70 @@ def delete_product():
     if not data or not data.get('id'):
         return jsonify({"error": "Invalid request"}), 400
 
+    conn = get_conn()
+    cursor = conn.cursor()
+
     cursor.execute("DELETE FROM Product WHERE product_id = %s", (data['id'],))
+
     conn.commit()
+    cursor.close()
+    conn.close()
 
     return jsonify({"message": "Product deleted"})
 
-# Total sales
+# ---------------------------
+# NEW: SALES HISTORY
+# ---------------------------
+@app.route('/sales')
+def get_sales():
+    conn = get_conn()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT s.sale_id, p.name, s.quantity, s.price, s.sale_date
+        FROM Sales s
+        JOIN Product p ON s.product_id = p.product_id
+        ORDER BY s.sale_id DESC
+    """)
+
+    rows = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    sales = []
+    for r in rows:
+        sales.append({
+            "sale_id": r[0],
+            "product": r[1],
+            "quantity": r[2],
+            "price": float(r[3]),
+            "date": str(r[4])
+        })
+
+    return jsonify(sales)
+
+# ---------------------------
+# TOTAL SALES
+# ---------------------------
 @app.route('/total_sales')
 def total_sales():
+    conn = get_conn()
+    cursor = conn.cursor()
+
     cursor.execute("SELECT SUM(quantity * price) FROM Sales")
     total = cursor.fetchone()[0] or 0
 
+    cursor.close()
+    conn.close()
+
     return jsonify({"total_sales": float(total)})
 
-# Health
+# Health check
 @app.route('/health')
 def health():
     return "OK"
 
+# Run
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
