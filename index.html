@@ -6,24 +6,37 @@
 </head>
 <body>
 
-<h1>Retail Store Management</h1>
+<div class="container">
 
-<input id="name" placeholder="Product Name">
-<input id="price" placeholder="Price">
-<input id="qty" placeholder="Quantity">
-<button onclick="addProduct()">Add</button>
+    <h1>Retail Store Management</h1>
 
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Price</th>
-            <th>Stock</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody id="table"></tbody>
-</table>
+    <div class="card">
+        <h2>Add Product</h2>
+        <div class="form">
+            <input id="name" placeholder="Product Name">
+            <input id="price" placeholder="Price">
+            <input id="qty" placeholder="Quantity">
+            <button onclick="addProduct()">Add</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Inventory</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="table"></tbody>
+        </table>
+    </div>
+
+</div>
 
 <script>
 async function loadProducts() {
@@ -37,10 +50,10 @@ async function loadProducts() {
         table.innerHTML += `
         <tr>
             <td>${p.name}</td>
-            <td>${p.price}</td>
+            <td>₹${p.price}</td>
             <td>${p.stock_quantity}</td>
             <td>
-                <button onclick="sell(${p.product_id})">Sell</button>
+                <button class="sell-btn" onclick="sell(${p.product_id})">Sell</button>
             </td>
         </tr>`;
     });
