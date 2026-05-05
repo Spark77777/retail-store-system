@@ -5,7 +5,7 @@ import os
 app = Flask(__name__)
 
 # Connect to PostgreSQL (Render DATABASE_URL)
-conn = psycopg2.connect(os.environ.get("DATABASE_URL"), sslmode='require')
+conn = psycopg2.connect(os.environ.get("DATABASE_URL"))
 cursor = conn.cursor()
 
 # ✅ Create table automatically (IMPORTANT for mobile users)
