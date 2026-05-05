@@ -8,7 +8,7 @@
 
 <div class="container">
 
-    <h1>Retail Store Management</h1>
+    <h1>🛒 Retail Store Management</h1>
 
     <!-- ADD PRODUCT -->
     <div class="card">
@@ -77,8 +77,8 @@ async function loadProducts() {
             <td>₹${p.price}</td>
             <td>${p.stock_quantity}</td>
             <td>
-                <button onclick="sell(${p.product_id})">Sell</button>
-                <button onclick="deleteProduct(${p.product_id})">Delete</button>
+                <button class="sell-btn" onclick="sell(${p.product_id})">Sell</button>
+                <button class="delete-btn" onclick="deleteProduct(${p.product_id})">Delete</button>
             </td>
         </tr>`;
     });
@@ -91,6 +91,11 @@ async function addProduct() {
     let price = document.getElementById("price").value;
     let qty = document.getElementById("qty").value;
 
+    if (!name || !price || !qty) {
+        alert("Please fill all fields");
+        return;
+    }
+
     let res = await fetch('/add_product', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -100,7 +105,7 @@ async function addProduct() {
     let data = await res.json();
     alert(data.message || data.error);
 
-    loadProducts();
+    refreshUI();
 }
 
 // ---------------------- SELL ----------------------
@@ -108,20 +113,26 @@ async function addProduct() {
 async function sell(id) {
     let qty = prompt("Enter quantity");
 
-    if (!qty) return;
+    if (!qty || isNaN(qty) || qty <= 0) {
+        alert("Enter a valid quantity");
+        return;
+    }
 
-    let res = await fetch('/sell', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, qty })
-    });
+    try {
+        let res = await fetch('/sell', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, qty })
+        });
 
-    let data = await res.json();
-    alert(data.message || data.error);
+        let data = await res.json();
+        alert(data.message || data.error);
 
-    loadProducts();
-    loadSales();
-    loadTotalSales();
+        refreshUI();
+
+    } catch {
+        alert("Error processing sale");
+    }
 }
 
 // ---------------------- DELETE ----------------------
@@ -129,16 +140,21 @@ async function sell(id) {
 async function deleteProduct(id) {
     if (!confirm("Delete this product?")) return;
 
-    let res = await fetch('/delete_product', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id })
-    });
+    try {
+        let res = await fetch('/delete_product', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        });
 
-    let data = await res.json();
-    alert(data.message || data.error);
+        let data = await res.json();
+        alert(data.message || data.error);
 
-    loadProducts();
+        refreshUI();
+
+    } catch {
+        alert("Error deleting product");
+    }
 }
 
 // ---------------------- SALES HISTORY ----------------------
@@ -150,13 +166,18 @@ async function loadSales() {
     let table = document.getElementById("salesTable");
     table.innerHTML = "";
 
+    if (data.length === 0) {
+        table.innerHTML = `<tr><td colspan="4">No sales yet</td></tr>`;
+        return;
+    }
+
     data.forEach(s => {
         table.innerHTML += `
         <tr>
             <td>${s.product}</td>
             <td>${s.quantity}</td>
             <td>₹${s.price}</td>
-            <td>${s.date}</td>
+            <td>${formatDate(s.date)}</td>
         </tr>`;
     });
 }
@@ -167,14 +188,28 @@ async function loadTotalSales() {
     let res = await fetch('/total_sales');
     let data = await res.json();
 
-    document.getElementById("totalSales").innerText = "₹" + data.total_sales;
+    document.getElementById("totalSales").innerText =
+        "₹" + (data.total_sales || 0);
+}
+
+// ---------------------- FORMAT DATE ----------------------
+
+function formatDate(dateString) {
+    let d = new Date(dateString);
+    return d.toLocaleString();
+}
+
+// ---------------------- REFRESH ----------------------
+
+function refreshUI() {
+    loadProducts();
+    loadSales();
+    loadTotalSales();
 }
 
 // ---------------------- INITIAL LOAD ----------------------
 
-loadProducts();
-loadSales();
-loadTotalSales();
+refreshUI();
 
 </script>
 
