@@ -10,6 +10,7 @@
 
     <h1>Retail Store Management</h1>
 
+    <!-- ADD PRODUCT -->
     <div class="card">
         <h2>Add Product</h2>
         <input id="name" placeholder="Product Name">
@@ -18,6 +19,7 @@
         <button onclick="addProduct()">Add</button>
     </div>
 
+    <!-- INVENTORY -->
     <div class="card">
         <h2>Inventory</h2>
         <table>
@@ -33,9 +35,34 @@
         </table>
     </div>
 
+    <!-- TOTAL SALES -->
+    <div class="card">
+        <h2>Total Revenue</h2>
+        <h3 id="totalSales">₹0</h3>
+    </div>
+
+    <!-- SALES HISTORY -->
+    <div class="card">
+        <h2>Sales History</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody id="salesTable"></tbody>
+        </table>
+    </div>
+
 </div>
 
 <script>
+
+// ---------------------- PRODUCTS ----------------------
+
 async function loadProducts() {
     let res = await fetch('/products');
     let data = await res.json();
@@ -57,6 +84,8 @@ async function loadProducts() {
     });
 }
 
+// ---------------------- ADD PRODUCT ----------------------
+
 async function addProduct() {
     let name = document.getElementById("name").value;
     let price = document.getElementById("price").value;
@@ -74,8 +103,12 @@ async function addProduct() {
     loadProducts();
 }
 
+// ---------------------- SELL ----------------------
+
 async function sell(id) {
     let qty = prompt("Enter quantity");
+
+    if (!qty) return;
 
     let res = await fetch('/sell', {
         method: 'POST',
@@ -87,7 +120,11 @@ async function sell(id) {
     alert(data.message || data.error);
 
     loadProducts();
+    loadSales();
+    loadTotalSales();
 }
+
+// ---------------------- DELETE ----------------------
 
 async function deleteProduct(id) {
     if (!confirm("Delete this product?")) return;
@@ -104,7 +141,41 @@ async function deleteProduct(id) {
     loadProducts();
 }
 
+// ---------------------- SALES HISTORY ----------------------
+
+async function loadSales() {
+    let res = await fetch('/sales');
+    let data = await res.json();
+
+    let table = document.getElementById("salesTable");
+    table.innerHTML = "";
+
+    data.forEach(s => {
+        table.innerHTML += `
+        <tr>
+            <td>${s.product}</td>
+            <td>${s.quantity}</td>
+            <td>₹${s.price}</td>
+            <td>${s.date}</td>
+        </tr>`;
+    });
+}
+
+// ---------------------- TOTAL SALES ----------------------
+
+async function loadTotalSales() {
+    let res = await fetch('/total_sales');
+    let data = await res.json();
+
+    document.getElementById("totalSales").innerText = "₹" + data.total_sales;
+}
+
+// ---------------------- INITIAL LOAD ----------------------
+
 loadProducts();
+loadSales();
+loadTotalSales();
+
 </script>
 
 </body>
