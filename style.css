@@ -1,11 +1,11 @@
 body {
-    font-family: Arial, sans-serif;
-    background: #f4f6f9;
+    font-family: 'Segoe UI', sans-serif;
+    background: #f5f7fb;
     margin: 0;
 }
 
 .container {
-    width: 90%;
+    width: 95%;
     max-width: 900px;
     margin: auto;
     padding: 20px;
@@ -20,42 +20,43 @@ h1 {
     background: white;
     padding: 20px;
     margin-bottom: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-
-.form {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 input {
     padding: 10px;
+    margin: 5px 5px 10px 0;
     border-radius: 6px;
     border: 1px solid #ccc;
-    flex: 1;
+    width: 28%;
 }
 
 button {
-    padding: 10px 15px;
-    background: #007bff;
-    color: white;
-    border: none;
+    padding: 10px 14px;
     border-radius: 6px;
+    border: none;
     cursor: pointer;
+    font-weight: 500;
 }
 
 button:hover {
-    background: #0056b3;
+    opacity: 0.9;
+}
+
+button:first-of-type {
+    background: #007bff;
+    color: white;
 }
 
 .sell-btn {
     background: #28a745;
+    color: white;
 }
 
-.sell-btn:hover {
-    background: #1e7e34;
+.delete-btn {
+    background: #dc3545;
+    color: white;
 }
 
 table {
@@ -76,4 +77,17 @@ th, td {
 
 tr:nth-child(even) {
     background: #f2f2f2;
+}
+
+#totalSales {
+    font-size: 28px;
+    color: #28a745;
+    text-align: center;
+}
+
+/* Mobile Fix */
+@media (max-width: 600px) {
+    input {
+        width: 100%;
+    }
 }
