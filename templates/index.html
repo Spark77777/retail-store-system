@@ -12,17 +12,14 @@
 
     <div class="card">
         <h2>Add Product</h2>
-        <div class="form">
-            <input id="name" placeholder="Product Name">
-            <input id="price" placeholder="Price">
-            <input id="qty" placeholder="Quantity">
-            <button onclick="addProduct()">Add</button>
-        </div>
+        <input id="name" placeholder="Product Name">
+        <input id="price" placeholder="Price">
+        <input id="qty" placeholder="Quantity">
+        <button onclick="addProduct()">Add</button>
     </div>
 
     <div class="card">
         <h2>Inventory</h2>
-
         <table>
             <thead>
                 <tr>
@@ -53,7 +50,8 @@ async function loadProducts() {
             <td>₹${p.price}</td>
             <td>${p.stock_quantity}</td>
             <td>
-                <button class="sell-btn" onclick="sell(${p.product_id})">Sell</button>
+                <button onclick="sell(${p.product_id})">Sell</button>
+                <button onclick="deleteProduct(${p.product_id})">Delete</button>
             </td>
         </tr>`;
     });
@@ -64,11 +62,14 @@ async function addProduct() {
     let price = document.getElementById("price").value;
     let qty = document.getElementById("qty").value;
 
-    await fetch('/add_product', {
+    let res = await fetch('/add_product', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, price, qty })
     });
+
+    let data = await res.json();
+    alert(data.message || data.error);
 
     loadProducts();
 }
@@ -76,11 +77,29 @@ async function addProduct() {
 async function sell(id) {
     let qty = prompt("Enter quantity");
 
-    await fetch('/sell', {
+    let res = await fetch('/sell', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, qty })
     });
+
+    let data = await res.json();
+    alert(data.message || data.error);
+
+    loadProducts();
+}
+
+async function deleteProduct(id) {
+    if (!confirm("Delete this product?")) return;
+
+    let res = await fetch('/delete_product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+    });
+
+    let data = await res.json();
+    alert(data.message || data.error);
 
     loadProducts();
 }
