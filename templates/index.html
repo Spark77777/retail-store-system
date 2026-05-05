@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Retail Store</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <h1>Retail Store Management</h1>
+
+    <div class="card">
+        <h2>Add Product</h2>
+        <div class="form">
+            <input id="name" placeholder="Product Name">
+            <input id="price" placeholder="Price">
+            <input id="qty" placeholder="Quantity">
+            <button onclick="addProduct()">Add</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Inventory</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="table"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+async function loadProducts() {
+    let res = await fetch('/products');
+    let data = await res.json();
+
+    let table = document.getElementById("table");
+    table.innerHTML = "";
+
+    data.forEach(p => {
+        table.innerHTML += `
+        <tr>
+            <td>${p.name}</td>
+            <td>₹${p.price}</td>
+            <td>${p.stock_quantity}</td>
+            <td>
+                <button class="sell-btn" onclick="sell(${p.product_id})">Sell</button>
+            </td>
+        </tr>`;
+    });
+}
+
+async function addProduct() {
+    let name = document.getElementById("name").value;
+    let price = document.getElementById("price").value;
+    let qty = document.getElementById("qty").value;
+
+    await fetch('/add_product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, price, qty })
+    });
+
+    loadProducts();
+}
+
+async function sell(id) {
+    let qty = prompt("Enter quantity");
+
+    await fetch('/sell', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, qty })
+    });
+
+    loadProducts();
+}
+
+loadProducts();
+</script>
+
+</body>
+</html>
