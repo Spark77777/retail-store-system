@@ -1,36 +1,79 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Retail Store System</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Retail Store</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
 <h1>Retail Store Management</h1>
 
-<div class="container">
+<input id="name" placeholder="Product Name">
+<input id="price" placeholder="Price">
+<input id="qty" placeholder="Quantity">
+<button onclick="addProduct()">Add</button>
 
-    <h2>Add Product</h2>
-    <input type="text" id="name" placeholder="Product Name">
-    <input type="number" id="price" placeholder="Price">
-    <input type="number" id="qty" placeholder="Quantity">
-    <button onclick="addProduct()">Add Product</button>
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody id="table"></tbody>
+</table>
 
-    <h2>Products</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Price</th>
-                <th>Stock</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody id="productTable"></tbody>
-    </table>
+<script>
+async function loadProducts() {
+    let res = await fetch('/products');
+    let data = await res.json();
 
-</div>
+    let table = document.getElementById("table");
+    table.innerHTML = "";
 
-<script src="script.js"></script>
+    data.forEach(p => {
+        table.innerHTML += `
+        <tr>
+            <td>${p.name}</td>
+            <td>${p.price}</td>
+            <td>${p.stock_quantity}</td>
+            <td>
+                <button onclick="sell(${p.product_id})">Sell</button>
+            </td>
+        </tr>`;
+    });
+}
+
+async function addProduct() {
+    let name = document.getElementById("name").value;
+    let price = document.getElementById("price").value;
+    let qty = document.getElementById("qty").value;
+
+    await fetch('/add_product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, price, qty })
+    });
+
+    loadProducts();
+}
+
+async function sell(id) {
+    let qty = prompt("Enter quantity");
+
+    await fetch('/sell', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, qty })
+    });
+
+    loadProducts();
+}
+
+loadProducts();
+</script>
+
 </body>
 </html>
